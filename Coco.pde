@@ -5,8 +5,7 @@ class Coco {
 	float aceleracionX = 0.0;
 	float aceleracionY = 0.0;
 	color c;
-	FWorld m;
-	FBody[] partes = new FBody[10];	
+		
 	float d ;
 	float frequency = 10;
 	float damping = 0.1;
@@ -15,8 +14,12 @@ class Coco {
 	float vAng = radians(PI);
 
   	float nDir;
+  	String nombre;
+	FWorld m;
+	FBody cuerpo;
+  	Boolean vive = true;
 
-	Coco (FWorld _m, color _c, float _d) {
+	Coco (FWorld _m, color _c, float _d, int _id) {
 		m = _m;
 		x = random(offset*2 ,width - offset*2);
 		y = random(offset*2, height- offset*2);
@@ -26,19 +29,21 @@ class Coco {
 		aceleracionX = 0.9;
 		aceleracionY = 0.9;
 		c = _c;		
+		nombre = "coco_"+_id;
 		crearCoco();
 	}
 
 
-
 	/*-COCO-*/
 	void crearCoco(){
-	    partes[0] = new FCircle(d);
-	    partes[0].setPosition(x, y);
-	    partes[0].setNoStroke();
-	    partes[0].setFill(red(c),green(c),blue(c));
-	    partes[0].setGroupIndex(1);
-	    m.add(partes[0]);
+	    cuerpo = new FCircle(d);
+	    cuerpo.setPosition(x, y);
+	    cuerpo.setNoStroke();
+	    cuerpo.setFill(red(c),green(c),blue(c));
+	    cuerpo.setGroupIndex(1);
+	    cuerpo.setDensity(d/100);
+	    cuerpo.setName(nombre);
+	    m.add(cuerpo);
 
 	}
 
@@ -61,12 +66,11 @@ class Coco {
 		float dy = aceleracionY * cos( dir);
 
 
-       	partes[0].addForce(dx*100,dy*100);  //buscar la magnitud valor bl ablbla abl
+       	cuerpo.addForce(dx*100,dy*100);  //buscar la magnitud valor bl ablbla abl
 
         x+=dx;
         y+=dy;
-        ellipse(x, y, d, d);
-       	//partes[0].setPosition(x,y);
+       	//cuerpo.setPosition(x,y);
 
 	}
 
@@ -74,7 +78,7 @@ class Coco {
 		x= _x;
 		y=_y;
 
-		partes[0].setPosition(x,y);
+		cuerpo.setPosition(x,y);
 	}
 
 	void changeColor(color _c){
@@ -90,5 +94,8 @@ class Coco {
 	}
 
 
+	void matar(){
+		m.remove(cuerpo);
+	}
 
 }

@@ -13,10 +13,11 @@ class Filamento {
 
 	float offset = 10;
 	float vAng = radians(PI);
-
+	Boolean vive = true;
   	float nDir;
+  	String name;
 
-	Filamento (FWorld _m, color _c, float _d) {
+	Filamento (FWorld _m, color _c, float _d,int _id) {
 		m = _m;
 		x = random(offset*2 ,width - offset*2);
 		y = random(offset*2, height- offset*2);
@@ -25,7 +26,8 @@ class Filamento {
 		d = _d;
 		aceleracionX = 0.9;
 		aceleracionY = 0.9;
-		c = _c;		
+		c = _c;	
+		name = "filamento_"+_id;	
 		crearFilamento();
 	}
 
@@ -39,7 +41,8 @@ class Filamento {
 		    partes[i].setNoStroke();
 		    partes[i].setFill(red(c),green(c),blue(c));
 		    partes[i].setGroupIndex(1);
-		     partes[i].setDensity(aceleracionX);
+		    partes[i].setDensity(aceleracionX);
+		    partes[i].setName(name);
 		    m.add(partes[i]);
 	  	}
 
@@ -75,12 +78,22 @@ class Filamento {
 		float dy = aceleracionY * cos( dir);
 
 
-       	partes[0].addImpulse(dx*0.2,dy*0.2);
 
         x+=dx;
         y+=dy;
         //ellipse(x, y, d, d);
        	//partes[0].setPosition(x,y);
+
+       	PVector posCabeza = new PVector(partes[0].getX(),partes[0].getY());
+       	PVector posCola = new PVector(partes[partes.length-1].getX(),partes[partes.length-1].getY());
+       	if(dist(posCabeza.x, posCabeza.y,posCola.x,posCabeza.y) > partes.length*d){
+   			for (int i=0; i<partes.length; i++) {
+   				partes[i].setFill(red(c),green(c),blue(c),50);
+   				vive = false;
+   			}
+       	}else{
+       		partes[0].addImpulse(dx*0.2,dy*0.2);
+       	}
 
 	}
 
@@ -102,6 +115,22 @@ class Filamento {
 		return d;
 	}
 
+	void sigueVivo(){
+		if(!vive){
+			for (int i=0; i<partes.length; i++) {
+				m.remove(partes[i]);
+			}
+		}
+	}
 
+	void matar(){
+		for (int i=0; i<partes.length; i++) {
+			ArrayList<FDistanceJoint> juntas;
+			juntas = partes[i].getJoints();
+			for (int j = 0; j < juntas.size(); ++j) {
+				m.remove(juntas.get(j));
+			}			
+		}
+	}
 
 }

@@ -19,10 +19,11 @@ public class bacterias extends PApplet {
 
 
 FWorld mundo;
-
-Filamento[] filamento = new Filamento[50];
-int limiteInicio = 5;
-Coco[] cocos = new Coco[50];
+ArrayList<Filamento> filamentos;
+ArrayList<Coco> cocos;
+ArrayList<Comida> comidas;
+int colorFilamentos = color(191,72,83);
+int colorCocos = color(233,161,76);
 
 public void setup() {
 	size(800, 600);
@@ -31,50 +32,60 @@ public void setup() {
 	Fisica.init(this);
 
 	mundo = new FWorld();
-	mundo.setEdges();
-	mundo.setGravity(0,0);
+	mundo.setEdges(color(255,255,255,0));
+	mundo.setGravity(0,2);
 
+	filamentos = new ArrayList<Filamento>(); 
+	cocos = new ArrayList<Coco>();
+	comidas = new ArrayList<Comida>(); 
 
-	for (int i = 0; i < filamento.length; ++i) {
-		if(i <= limiteInicio){
-			filamento[i] = new Filamento(mundo,color(196,69,90), 20);
-		}
-	}
-
-	for (int i = 0; i < cocos.length; ++i) {
-		if(i <= limiteInicio){
-			cocos[i] = new Coco(mundo,color(234,162,77), 50);
-		}
-	}
 }
 
 public void draw() {
 	background(255);
 
-	for (int i = 0; i < filamento.length; ++i) {
-		if(i <= limiteInicio){
-			filamento[i].mover();
-		}
+	/*-FILAMENTOS-*/
+	for (int i = filamentos.size()-1; i >= 0; i--) {
+		Filamento esteFilamento = filamentos.get(i);
+		esteFilamento.mover();
+		esteFilamento.sigueVivo();
 	}
-	
 
-	for (int i = 0; i < cocos.length; ++i) {
-		if(i <= limiteInicio){
-			cocos[i].mover();
-		}
+	/*-COCOS-*/
+	for (int i = cocos.size()-1; i >= 0; i--) {
+		Coco esteCoco = cocos.get(i);
+		esteCoco.mover();
 	}
 
 	mundo.step();
 	mundo.draw();
 }
 
-public void mousePressed(){
-	limiteInicio++;
-	filamento[limiteInicio] = new Filamento(mundo,color(196,69,90), 5);
-	cocos[limiteInicio] = new Coco(mundo,color(234,162,77), 50);
-	filamento[limiteInicio].setPos(mouseX +100,mouseY +100);
-	cocos[limiteInicio].setPos(mouseX,mouseY);
+public void keyPressed(){
+
+	switch (key) {
+		case 'f' :
+			filamentos.add(new Filamento(mundo,colorFilamentos,5,filamentos.size()));
+		break;	
+		case 'F' :
+			int cf = PApplet.parseInt(random(filamentos.size()));
+			Filamento esteFilamento= filamentos.get(cf);
+			esteFilamento.matar();
+		break;	
+		case 'c' :
+			cocos.add(new Coco(mundo,colorCocos,50, cocos.size()));			
+		break;	
+		case 'C' :
+			int cc = PApplet.parseInt(random(cocos.size()));
+			Coco esteCoco= cocos.get(cc);
+			esteCoco.matar();
+		break;	
+		case 'm' :
+			comidas.add(new Comida(mundo));
+		break;	
+	}
 }
+
 class Coco {
 	float x = 0.0f;
 	float y = 0.0f;
@@ -82,8 +93,7 @@ class Coco {
 	float aceleracionX = 0.0f;
 	float aceleracionY = 0.0f;
 	int c;
-	FWorld m;
-	FBody[] partes = new FBody[10];	
+		
 	float d ;
 	float frequency = 10;
 	float damping = 0.1f;
@@ -92,8 +102,12 @@ class Coco {
 	float vAng = radians(PI);
 
   	float nDir;
+  	String nombre;
+	FWorld m;
+	FBody cuerpo;
+  	Boolean vive = true;
 
-	Coco (FWorld _m, int _c, float _d) {
+	Coco (FWorld _m, int _c, float _d, int _id) {
 		m = _m;
 		x = random(offset*2 ,width - offset*2);
 		y = random(offset*2, height- offset*2);
@@ -103,20 +117,21 @@ class Coco {
 		aceleracionX = 0.9f;
 		aceleracionY = 0.9f;
 		c = _c;		
+		nombre = "coco_"+_id;
 		crearCoco();
 	}
 
 
-
 	/*-COCO-*/
 	public void crearCoco(){
-	    partes[0] = new FCircle(d);
-	    partes[0].setPosition(x, y);
-	    partes[0].setNoStroke();
-	    partes[0].setFill(red(c),green(c),blue(c));
-	    partes[0].setGroupIndex(1);
-	    partes[0].setDensity(0.8f);
-	    m.add(partes[0]);
+	    cuerpo = new FCircle(d);
+	    cuerpo.setPosition(x, y);
+	    cuerpo.setNoStroke();
+	    cuerpo.setFill(red(c),green(c),blue(c));
+	    cuerpo.setGroupIndex(1);
+	    cuerpo.setDensity(d/100);
+	    cuerpo.setName(nombre);
+	    m.add(cuerpo);
 
 	}
 
@@ -139,12 +154,11 @@ class Coco {
 		float dy = aceleracionY * cos( dir);
 
 
-       	partes[0].addForce(dx*100,dy*100);  //buscar la magnitud valor bl ablbla abl
+       	cuerpo.addForce(dx*100,dy*100);  //buscar la magnitud valor bl ablbla abl
 
         x+=dx;
         y+=dy;
-        ellipse(x, y, d, d);
-       	//partes[0].setPosition(x,y);
+       	//cuerpo.setPosition(x,y);
 
 	}
 
@@ -152,7 +166,7 @@ class Coco {
 		x= _x;
 		y=_y;
 
-		partes[0].setPosition(x,y);
+		cuerpo.setPosition(x,y);
 	}
 
 	public void changeColor(int _c){
@@ -168,6 +182,45 @@ class Coco {
 	}
 
 
+	public void matar(){
+		m.remove(cuerpo);
+	}
+
+}
+class Comida {
+	FWorld mundo;
+	FBody comida;
+	String nombre;
+	int d = 6;
+	int c = color(0,208,140);
+	int cStroke = color(0,125,0);
+	int energia = PApplet.parseInt(random(5,25));
+
+	Comida (FWorld _m) {
+		mundo = _m;
+		nombre = "comida";
+		crearComida();
+	}
+
+	public void crearComida(){
+		FBlob liquido = new FBlob();
+
+		 liquido.setPosition(width/2,height/2);
+		 liquido.setAsCircle(540,40);
+		 liquido.setFill(red(c),green(c),blue(c));
+		 mundo.add(liquido);
+
+		for (int i = 0; i < energia; ++i) {
+			comida = new FCircle(d);
+			comida.setFill(red(c),green(c),blue(c));;
+			comida.setName(nombre);
+			comida.setPosition(width/2,height/2);
+			comida.setStroke(1);
+			comida.setStrokeColor(cStroke);
+			mundo.add(comida);	
+		}
+		
+	}
 
 }
 class Filamento {
@@ -185,10 +238,11 @@ class Filamento {
 
 	float offset = 10;
 	float vAng = radians(PI);
-
+	Boolean vive = true;
   	float nDir;
+  	String name;
 
-	Filamento (FWorld _m, int _c, float _d) {
+	Filamento (FWorld _m, int _c, float _d,int _id) {
 		m = _m;
 		x = random(offset*2 ,width - offset*2);
 		y = random(offset*2, height- offset*2);
@@ -197,7 +251,8 @@ class Filamento {
 		d = _d;
 		aceleracionX = 0.9f;
 		aceleracionY = 0.9f;
-		c = _c;		
+		c = _c;	
+		name = "filamento_"+_id;	
 		crearFilamento();
 	}
 
@@ -211,7 +266,8 @@ class Filamento {
 		    partes[i].setNoStroke();
 		    partes[i].setFill(red(c),green(c),blue(c));
 		    partes[i].setGroupIndex(1);
-		     partes[i].setDensity(aceleracionX);
+		    partes[i].setDensity(aceleracionX);
+		    partes[i].setName(name);
 		    m.add(partes[i]);
 	  	}
 
@@ -247,12 +303,22 @@ class Filamento {
 		float dy = aceleracionY * cos( dir);
 
 
-       	partes[0].addImpulse(dx*0.2f,dy*0.2f);
 
         x+=dx;
         y+=dy;
         //ellipse(x, y, d, d);
        	//partes[0].setPosition(x,y);
+
+       	PVector posCabeza = new PVector(partes[0].getX(),partes[0].getY());
+       	PVector posCola = new PVector(partes[partes.length-1].getX(),partes[partes.length-1].getY());
+       	if(dist(posCabeza.x, posCabeza.y,posCola.x,posCabeza.y) > partes.length*d){
+   			for (int i=0; i<partes.length; i++) {
+   				partes[i].setFill(red(c),green(c),blue(c),50);
+   				vive = false;
+   			}
+       	}else{
+       		partes[0].addImpulse(dx*0.2f,dy*0.2f);
+       	}
 
 	}
 
@@ -274,7 +340,23 @@ class Filamento {
 		return d;
 	}
 
+	public void sigueVivo(){
+		if(!vive){
+			for (int i=0; i<partes.length; i++) {
+				m.remove(partes[i]);
+			}
+		}
+	}
 
+	public void matar(){
+		for (int i=0; i<partes.length; i++) {
+			ArrayList<FDistanceJoint> juntas;
+			juntas = partes[i].getJoints();
+			for (int j = 0; j < juntas.size(); ++j) {
+				m.remove(juntas.get(j));
+			}			
+		}
+	}
 
 }
 //---------------------------------------------------------------------------------------------------------------------------
