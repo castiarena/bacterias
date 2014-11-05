@@ -57,6 +57,7 @@ void draw() {
 	for (int i = cocos.size()-1; i >= 0; i--) {
 		Coco esteCoco = cocos.get(i);
 		esteCoco.mover();
+		esteCoco.buscarComida(comidas);
 	}
 
 	mundo.step();
@@ -78,7 +79,7 @@ void keyPressed(){
 			esteFilamento.matar();
 		break;	
 		case 'c' :
-			cocos.add(new Coco(mundo,80, cocos.size()));			
+			cocos.add(new Coco(mundo,20, cocos.size()));			
 		break;	
 		case 'C' :
 			int cc = int(random(cocos.size()));

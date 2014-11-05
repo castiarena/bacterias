@@ -75,6 +75,7 @@ public void draw() {
 	for (int i = cocos.size()-1; i >= 0; i--) {
 		Coco esteCoco = cocos.get(i);
 		esteCoco.mover();
+		esteCoco.buscarComida(comidas);
 	}
 
 	mundo.step();
@@ -96,7 +97,7 @@ public void keyPressed(){
 			esteFilamento.matar();
 		break;	
 		case 'c' :
-			cocos.add(new Coco(mundo,80, cocos.size()));			
+			cocos.add(new Coco(mundo,20, cocos.size()));			
 		break;	
 		case 'C' :
 			int cc = PApplet.parseInt(random(cocos.size()));
@@ -110,6 +111,8 @@ public void keyPressed(){
 }
 
 class Coco {
+	boolean coco = true;
+
 	float x = 0.0f;
 	float y = 0.0f;
 	float dir = 0.0f;
@@ -131,7 +134,7 @@ class Coco {
   	Boolean vive = true;
 
   	PImage pelos;
-  	int energia = 0;
+  	int energia = 10;
 
 	Coco (FWorld _m, float _d, int _id) {
 		m = _m;
@@ -169,17 +172,33 @@ class Coco {
 	    cuerpo = new FCircle(d);
 	    cuerpo.setPosition(x, y);
 	    cuerpo.setNoStroke();
-	    cuerpo.setFill(red(c),green(c),blue(c));
-	    cuerpo.setGroupIndex(1);
+	    cuerpo.setNoFill();
 	    cuerpo.setDensity(d/100);
 	    cuerpo.setName(nombre);
-	    cuerpo.attachImage(pelos);
+	    //cuerpo.attachImage(pelos);
 	    m.add(cuerpo);
 
 	}
 
+	public void dibujar(){
+		pushStyle();
+		pushMatrix();
+			float escala = map(d,6,80,0.4f,1);
+			translate(cuerpo.getX(), cuerpo.getY());
+			ellipse(0,0,d,d);
+			scale(escala);
+			imageMode(CENTER);
+			image(pelos,0,0);
+		popMatrix();
+		popStyle();
+	}
 
 	public void mover(){
+		if(coco){
+			dibujar();
+		}
+
+		
 
 		float diferencia = menorDistAngulos( dir, nDir );
 	    float f = 0.05f;
@@ -198,10 +217,10 @@ class Coco {
 
 		cuerpo.addTorque(dx*5);
 
-       	cuerpo.addForce(dx*300,dy*300);  //buscar la magnitud valor 
+       	//cuerpo.addForce(dx*(energia*5),dy*(energia)*5);  //buscar la magnitud valor 
         x+=dx;
         y+=dy;
-       	//cuerpo.setPosition(x,y);
+       	cuerpo.setPosition(x,y);
 
 	}
 
@@ -228,26 +247,53 @@ class Coco {
 	public void matar(){
 		m.remove(cuerpo);
 	}
-
+	public void crecer(){
+		d+= energia/35;
+	}
 	public void buscarComida(ArrayList<Comida> _comida){
-		for (int i = _comida.size()-1; i >= 0; i--){
-			Comida estaComida = _comida.get(i);
+		if(energia<100){
+		println("energia: "+energia);	
+			float _tx = 0.0f;
+			float _ty = 0.0f;
 
-			float _tx = estaComida.pos().x;
-			float _ty = estaComida.pos().y;
+			Comida estaComida = _comida.get(_comida.size()-1);
+			Comida otraComida = _comida.get(0);
 
-			if(dist(x,y,_tx,_ty)>d){
-				
-				energia = estaComida.darEnergia();
-			}	
-		}
+			float _etx = estaComida.pos().x;
+			float _ety = estaComida.pos().y;
 
-		if(energia>25){
+			float _otx = otraComida.pos().x;
+			float _oty = otraComida.pos().y;
 
-		}
+			if(dist(cuerpo.getX(),cuerpo.getY(),_etx,_ety)< dist(cuerpo.getX(),cuerpo.getY(),_otx,_oty)){
+				x += (_etx-x)*0.09f;
+				y += (_ety-y)*0.09f;
+				_tx = _etx;
+				_ty = _ety;		
+				if(dist(cuerpo.getX(),cuerpo.getY(),_tx,_ty)< d -5){					
+					energia += estaComida.darEnergia(_comida);
+					crecer();
+				}		
+			}else{
+				x += (_otx-x)*0.09f;
+				y += (_oty-y)*0.09f;
+				_tx = _otx;
+				_ty = _oty;
+				if(dist(cuerpo.getX(),cuerpo.getY(),_tx,_ty)< d -5){					
+					energia += otraComida.darEnergia(_comida);
+					crecer();
+				}
+			}		
+
+			
+		}				
+
+		
 	}
 
 	public void addImage(PImage _i){
+		energia = 100;
+		coco = false;
 		cuerpo.setNoStroke();
 		cuerpo.setNoFill();
 		cuerpo.attachImage(_i);
@@ -267,8 +313,11 @@ class Comida {
 	float y = 0.0f;
 	PVector position;
 
+	ArrayList<FCircle> comidas;
+
 	Comida (FWorld _m) {
 		mundo = _m;
+		comidas = new ArrayList<FCircle>();
 		nombre = "comida";
 		x = random(50, width-50);		
 		y = random(50, height-50);
@@ -285,24 +334,28 @@ class Comida {
 
 		for (int i = 0; i < energia; ++i) {
 			d =PApplet.parseInt(random(4,8));
-			comida = new FCircle(d);
-			comida.setFill(red(c),green(c),blue(c));;
-			comida.setName(nombre);
-			comida.setPosition(x,y);
-			comida.setStroke(borde);
-			comida.setStrokeColor(cStroke);
-			mundo.add(comida);
+			comidas.add(new FCircle(d));		    
+		}
 
-			FDistanceJoint junta = new FDistanceJoint(centro, comida);
+		for (int i = comidas.size()-1; i >= 0; i--){
+			FCircle tComida = comidas.get(i);
+			tComida.setFill(red(c),green(c),blue(c));;
+			tComida.setName(nombre);
+			tComida.setPosition(x,y);
+			tComida.setStroke(borde);
+			tComida.setStrokeColor(cStroke);
+			mundo.add(tComida);
+
+			FDistanceJoint junta = new FDistanceJoint(centro, tComida);
 		    junta.setLength(2);
 		    junta.setNoStroke();
 		    junta.setStroke(0);
 		    junta.setFill(0);
 		    junta.setDrawable(false);
 		    junta.setFrequency(0.8f);
-		    mundo.add(junta);	
-		    
+		    mundo.add(junta);
 		}
+				
 		centro.addForce(40,40);
 		
 	}
@@ -318,12 +371,27 @@ class Comida {
 		return position;
 	}
 
-	public int darEnergia(){
+	public int darEnergia(ArrayList _donde){
 		int _e = energia;
 
-		return _e;
+		if(energia < 1){
+			for (int i = comidas.size()-1; i >= 0; i--){
+				mundo.remove(comidas.get(i));
+			}
+			mundo.remove(centro);
+			_donde.remove(this);
+		}else{
+			energia--;
+			FCircle estaComida = comidas.get(energia);
+			mundo.remove(estaComida);
+		}
+		
+		return PApplet.parseInt(map(_e,100,0,0,20));
 	}
 
+	public int tam(){
+		return energia * d;
+	}
 }
 class Decobg extends Coco {
 	PImage mancha;

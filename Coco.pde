@@ -1,4 +1,6 @@
 class Coco {
+	boolean coco = true;
+
 	float x = 0.0;
 	float y = 0.0;
 	float dir = 0.0;
@@ -20,7 +22,7 @@ class Coco {
   	Boolean vive = true;
 
   	PImage pelos;
-  	int energia = 0;
+  	int energia = 10;
 
 	Coco (FWorld _m, float _d, int _id) {
 		m = _m;
@@ -58,17 +60,33 @@ class Coco {
 	    cuerpo = new FCircle(d);
 	    cuerpo.setPosition(x, y);
 	    cuerpo.setNoStroke();
-	    cuerpo.setFill(red(c),green(c),blue(c));
-	    cuerpo.setGroupIndex(1);
+	    cuerpo.setNoFill();
 	    cuerpo.setDensity(d/100);
 	    cuerpo.setName(nombre);
-	    cuerpo.attachImage(pelos);
+	    //cuerpo.attachImage(pelos);
 	    m.add(cuerpo);
 
 	}
 
+	void dibujar(){
+		pushStyle();
+		pushMatrix();
+			float escala = map(d,6,80,0.4,1);
+			translate(cuerpo.getX(), cuerpo.getY());
+			ellipse(0,0,d,d);
+			scale(escala);
+			imageMode(CENTER);
+			image(pelos,0,0);
+		popMatrix();
+		popStyle();
+	}
 
 	void mover(){
+		if(coco){
+			dibujar();
+		}
+
+		
 
 		float diferencia = menorDistAngulos( dir, nDir );
 	    float f = 0.05;
@@ -87,10 +105,10 @@ class Coco {
 
 		cuerpo.addTorque(dx*5);
 
-       	cuerpo.addForce(dx*300,dy*300);  //buscar la magnitud valor 
+       	//cuerpo.addForce(dx*(energia*5),dy*(energia)*5);  //buscar la magnitud valor 
         x+=dx;
         y+=dy;
-       	//cuerpo.setPosition(x,y);
+       	cuerpo.setPosition(x,y);
 
 	}
 
@@ -117,26 +135,53 @@ class Coco {
 	void matar(){
 		m.remove(cuerpo);
 	}
-
+	void crecer(){
+		d+= energia/35;
+	}
 	void buscarComida(ArrayList<Comida> _comida){
-		for (int i = _comida.size()-1; i >= 0; i--){
-			Comida estaComida = _comida.get(i);
+		if(energia<100){
+		println("energia: "+energia);	
+			float _tx = 0.0;
+			float _ty = 0.0;
 
-			float _tx = estaComida.pos().x;
-			float _ty = estaComida.pos().y;
+			Comida estaComida = _comida.get(_comida.size()-1);
+			Comida otraComida = _comida.get(0);
 
-			if(dist(x,y,_tx,_ty)>d){
-				
-				energia = estaComida.darEnergia();
-			}	
-		}
+			float _etx = estaComida.pos().x;
+			float _ety = estaComida.pos().y;
 
-		if(energia>25){
+			float _otx = otraComida.pos().x;
+			float _oty = otraComida.pos().y;
 
-		}
+			if(dist(cuerpo.getX(),cuerpo.getY(),_etx,_ety)< dist(cuerpo.getX(),cuerpo.getY(),_otx,_oty)){
+				x += (_etx-x)*0.09;
+				y += (_ety-y)*0.09;
+				_tx = _etx;
+				_ty = _ety;		
+				if(dist(cuerpo.getX(),cuerpo.getY(),_tx,_ty)< d -5){					
+					energia += estaComida.darEnergia(_comida);
+					crecer();
+				}		
+			}else{
+				x += (_otx-x)*0.09;
+				y += (_oty-y)*0.09;
+				_tx = _otx;
+				_ty = _oty;
+				if(dist(cuerpo.getX(),cuerpo.getY(),_tx,_ty)< d -5){					
+					energia += otraComida.darEnergia(_comida);
+					crecer();
+				}
+			}		
+
+			
+		}				
+
+		
 	}
 
 	void addImage(PImage _i){
+		energia = 100;
+		coco = false;
 		cuerpo.setNoStroke();
 		cuerpo.setNoFill();
 		cuerpo.attachImage(_i);
