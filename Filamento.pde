@@ -4,7 +4,7 @@ class Filamento {
 	float dir = 0.0;
 	float aceleracionX = 0.0;
 	float aceleracionY = 0.0;
-	color c;
+	color c = color(191,72,83);;
 	FWorld m;
 	FBody[] partes = new FBody[10];	
 	float d ;
@@ -17,7 +17,7 @@ class Filamento {
   	float nDir;
   	String name;
 
-	Filamento (FWorld _m, color _c, float _d,int _id) {
+	Filamento (FWorld _m, float _d,int _id) {
 		m = _m;
 		x = random(offset*2 ,width - offset*2);
 		y = random(offset*2, height- offset*2);
@@ -26,7 +26,6 @@ class Filamento {
 		d = _d;
 		aceleracionX = 0.9;
 		aceleracionY = 0.9;
-		c = _c;	
 		name = "filamento_"+_id;	
 		crearFilamento();
 	}

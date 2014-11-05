@@ -4,7 +4,7 @@ class Coco {
 	float dir = 0.0;
 	float aceleracionX = 0.0;
 	float aceleracionY = 0.0;
-	color c;
+	color c = color(233,161,76);
 		
 	float d ;
 	float frequency = 10;
@@ -19,7 +19,10 @@ class Coco {
 	FBody cuerpo;
   	Boolean vive = true;
 
-	Coco (FWorld _m, color _c, float _d, int _id) {
+  	PImage pelos;
+  	int energia = 0;
+
+	Coco (FWorld _m, float _d, int _id) {
 		m = _m;
 		x = random(offset*2 ,width - offset*2);
 		y = random(offset*2, height- offset*2);
@@ -28,10 +31,26 @@ class Coco {
 		d = _d;
 		aceleracionX = 0.9;
 		aceleracionY = 0.9;
-		c = _c;		
 		nombre = "coco_"+_id;
+		pelos = loadImage("data/bola.png");
 		crearCoco();
 	}
+
+	Coco (FWorld _m, float _d) {
+		m = _m;
+		x = random(offset*2 ,width - offset*2);
+		y = random(offset*2, height- offset*2);
+		dir = random(TWO_PI);
+		nDir = dir;
+		d = _d;
+		aceleracionX = 0.9;
+		aceleracionY = 0.9;
+		nombre = "coco";
+		pelos = loadImage("data/bola.png");
+
+		crearCoco();
+	}
+
 
 
 	/*-COCO-*/
@@ -43,6 +62,7 @@ class Coco {
 	    cuerpo.setGroupIndex(1);
 	    cuerpo.setDensity(d/100);
 	    cuerpo.setName(nombre);
+	    cuerpo.attachImage(pelos);
 	    m.add(cuerpo);
 
 	}
@@ -65,9 +85,9 @@ class Coco {
 		float dx = aceleracionX * sin( dir);
 		float dy = aceleracionY * cos( dir);
 
+		cuerpo.addTorque(dx*5);
 
-       	cuerpo.addForce(dx*100,dy*100);  //buscar la magnitud valor bl ablbla abl
-
+       	cuerpo.addForce(dx*300,dy*300);  //buscar la magnitud valor 
         x+=dx;
         y+=dy;
        	//cuerpo.setPosition(x,y);
@@ -98,4 +118,27 @@ class Coco {
 		m.remove(cuerpo);
 	}
 
+	void buscarComida(ArrayList<Comida> _comida){
+		for (int i = _comida.size()-1; i >= 0; i--){
+			Comida estaComida = _comida.get(i);
+
+			float _tx = estaComida.pos().x;
+			float _ty = estaComida.pos().y;
+
+			if(dist(x,y,_tx,_ty)>d){
+				
+				energia = estaComida.darEnergia();
+			}	
+		}
+
+		if(energia>25){
+
+		}
+	}
+
+	void addImage(PImage _i){
+		cuerpo.setNoStroke();
+		cuerpo.setNoFill();
+		cuerpo.attachImage(_i);
+	}
 }

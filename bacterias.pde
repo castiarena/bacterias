@@ -1,6 +1,10 @@
 import fisica.*;
 
 FWorld mundo;
+FWorld bg;
+ArrayList<Decobg> decos;
+
+
 ArrayList<Filamento> filamentos;
 ArrayList<Coco> cocos;
 ArrayList<Comida> comidas;
@@ -21,10 +25,26 @@ void setup() {
 	cocos = new ArrayList<Coco>();
 	comidas = new ArrayList<Comida>(); 
 
+	bg = new FWorld();
+	bg.setGravity(0,0);
+	bg.setEdges(color(255,255,255,0));
+
+
+	decos = new ArrayList<Decobg>();
+	for (int i = 0; i < 8; i++) {
+		decos.add(new Decobg(bg));
+	}
 }
 
 void draw() {
-	background(255);
+	background(color(235,235,244));
+	/*-bacground-*/
+	for (int i = decos.size()-1; i >= 0; i--) {
+		Decobg esteDeco = decos.get(i);
+		esteDeco.mover();
+	}
+	bg.step();
+	bg.draw();
 
 	/*-FILAMENTOS-*/
 	for (int i = filamentos.size()-1; i >= 0; i--) {
@@ -41,13 +61,16 @@ void draw() {
 
 	mundo.step();
 	mundo.draw();
+	
+
+	
 }
 
 void keyPressed(){
 
 	switch (key) {
 		case 'f' :
-			filamentos.add(new Filamento(mundo,colorFilamentos,5,filamentos.size()));
+			filamentos.add(new Filamento(mundo,5,filamentos.size()));
 		break;	
 		case 'F' :
 			int cf = int(random(filamentos.size()));
@@ -55,7 +78,7 @@ void keyPressed(){
 			esteFilamento.matar();
 		break;	
 		case 'c' :
-			cocos.add(new Coco(mundo,colorCocos,50, cocos.size()));			
+			cocos.add(new Coco(mundo,80, cocos.size()));			
 		break;	
 		case 'C' :
 			int cc = int(random(cocos.size()));
