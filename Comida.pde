@@ -6,8 +6,12 @@ class Comida {
 	int d = 6;
 	color c = color(0,208,140);
 	color cStroke = color(0,125,0);
+
+	color c2 = color(73,0,34);
+
 	int borde = 2;
-	int energia = int(random(55,100));
+	int energia = 5;
+	int energiaValor = 100;
 	float x = 0.0;
 	float y = 0.0;
 	PVector position;
@@ -20,15 +24,38 @@ class Comida {
 		nombre = "comida";
 		x = random(50, width-50);		
 		y = random(50, height-50);
-		crearComida();
+		crearComida(true);
+	}
+	Comida (FWorld _m, PVector _pos) {
+		mundo = _m;
+		comidas = new ArrayList<FCircle>();
+		nombre = "comida";
+		x = _pos.x;		
+		y =_pos.y;
+		crearComida(true);
 	}
 
-	void crearComida(){
+
+	Comida (FWorld _m , float _x,float _y) {
+		mundo = _m;
+		comidas = new ArrayList<FCircle>();
+		nombre = "desecho";
+		x =_x;		
+		y =_y;
+		c= c2;
+		crearComida(false);
+	}
+
+	void crearComida(boolean _borde){
 		centro = new FCircle(d);
 	 	centro.setPosition(x,y);
 	 	centro.setFill(red(c),green(c),blue(c));
-	 	centro.setStroke(borde);
-		centro.setStrokeColor(cStroke);
+	 	if(_borde){
+	 		centro.setStroke(borde);
+			centro.setStrokeColor(cStroke);
+	 	}else{
+	 		centro.setNoStroke();
+	 	}
 	 	mundo.add(centro);
 
 		for (int i = 0; i < energia; ++i) {
@@ -41,8 +68,12 @@ class Comida {
 			tComida.setFill(red(c),green(c),blue(c));;
 			tComida.setName(nombre);
 			tComida.setPosition(x,y);
-			tComida.setStroke(borde);
-			tComida.setStrokeColor(cStroke);
+			if(_borde){		 		
+				tComida.setStroke(borde);
+				tComida.setStrokeColor(cStroke);
+		 	}else{
+		 		tComida.setNoStroke();
+		 	}
 			mundo.add(tComida);
 
 			FDistanceJoint junta = new FDistanceJoint(centro, tComida);
@@ -71,21 +102,21 @@ class Comida {
 	}
 
 	int darEnergia(ArrayList _donde){
-		int _e = energia;
+		int _e = energiaValor;
 
-		if(energia < 1){
+		if(energiaValor < 1){
 			for (int i = comidas.size()-1; i >= 0; i--){
 				mundo.remove(comidas.get(i));
 			}
 			mundo.remove(centro);
 			_donde.remove(this);
 		}else{
-			energia--;
-			FCircle estaComida = comidas.get(energia);
+			energiaValor--;
+			FCircle estaComida = comidas.get(int(random(comidas.size())));
 			mundo.remove(estaComida);
 		}
 		
-		return int(map(_e,100,0,0,20));
+		return _e;
 	}
 
 	int tam(){

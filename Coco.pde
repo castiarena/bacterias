@@ -1,6 +1,6 @@
 class Coco {
 	boolean coco = true;
-
+	boolean buscaComida = true;
 	float x = 0.0;
 	float y = 0.0;
 	float dir = 0.0;
@@ -21,6 +21,7 @@ class Coco {
 	FBody cuerpo;
   	Boolean vive = true;
 
+  	int timer;
   	PImage pelos;
   	int energia = 10;
 
@@ -53,6 +54,22 @@ class Coco {
 		crearCoco();
 	}
 
+	Coco (FWorld _m, float _d, PVector _pos) {
+		m = _m;
+		x = _pos.x;
+		y = _pos.y;
+		dir = random(TWO_PI);
+		nDir = dir;
+		d = _d;
+		aceleracionX = 0.9;
+		aceleracionY = 0.9;
+		nombre = "coco";
+		pelos = loadImage("data/bola.png");
+
+		crearCoco();
+	}
+
+
 
 
 	/*-COCO-*/
@@ -73,7 +90,7 @@ class Coco {
 		pushMatrix();
 			float escala = map(d,6,80,0.4,1);
 			translate(cuerpo.getX(), cuerpo.getY());
-			ellipse(0,0,d,d);
+			//ellipse(0,0,d,d);
 			scale(escala);
 			imageMode(CENTER);
 			image(pelos,0,0);
@@ -81,12 +98,16 @@ class Coco {
 		popStyle();
 	}
 
-	void mover(){
+	void mover(ArrayList<Coco> _c){
+		timer = millis();
+
 		if(coco){
 			dibujar();
 		}
 
-		
+		if(timer%101 == 100){
+			energia-=5;
+		}
 
 		float diferencia = menorDistAngulos( dir, nDir );
 	    float f = 0.05;
@@ -95,20 +116,34 @@ class Coco {
 	    dir += random( -vAng, vAng ); 
 
 
-	 	aceleracionX =  x > width - offset ? aceleracionX*-1 : aceleracionX ;
+	 	/*aceleracionX =  x > width - offset ? aceleracionX*-1 : aceleracionX ;
 	 	aceleracionY = 	y > height - offset ? aceleracionY*-1 : aceleracionY ;
 	 	aceleracionX =  x < offset ? aceleracionX*-1 : aceleracionX ;
-	 	aceleracionY = 	y < offset ? aceleracionY*-1 : aceleracionY ;
+	 	aceleracionY = 	y < offset ? aceleracionY*-1 : aceleracionY ;*/
+	 	if(dist(width/2,height/2,x,y) > height/2){
+	    	aceleracionX = aceleracionX*-1;
+	    	aceleracionY = aceleracionY*-1;	
+	    }
 
 		float dx = aceleracionX * sin( dir);
 		float dy = aceleracionY * cos( dir);
 
 		cuerpo.addTorque(dx*5);
-
-       	//cuerpo.addForce(dx*(energia*5),dy*(energia)*5);  //buscar la magnitud valor 
+		float xa = cuerpo.getX();
+		float ya = cuerpo.getY();
         x+=dx;
         y+=dy;
-       	cuerpo.setPosition(x,y);
+        if(buscaComida || !coco){
+        	xa+=(x-xa)*0.2;
+        	ya+=(y-ya)*0.2;
+       		cuerpo.setPosition(xa,ya);
+        }else{
+       		cuerpo.addForce(dx*(energia*0.2),dy*(energia*0.2));  //buscar la magnitud valor
+       		energia -- ;
+       		if(energia<0){
+				_c.remove(this);
+			} 
+        }
 
 	}
 
@@ -117,6 +152,24 @@ class Coco {
 		y=_y;
 
 		cuerpo.setPosition(x,y);
+	}
+
+	void seguir(float _xpos,float _ypos){
+		float diferencia = menorDistAngulos( dir, nDir );
+	    float f = 0.05;
+
+	    dir += diferencia * f;
+	    dir += random( -vAng, vAng ); 
+
+		float dx = aceleracionX * sin( dir);
+		float dy = aceleracionY * cos( dir);
+
+		cuerpo.addForce(dx*(energia*0.2),dy*(energia*0.2));
+	}
+
+	PVector getPos(){
+		PVector salida = new PVector(cuerpo.getX(),cuerpo.getY());
+		return salida;
 	}
 
 	void changeColor(color _c){
@@ -135,12 +188,10 @@ class Coco {
 	void matar(){
 		m.remove(cuerpo);
 	}
-	void crecer(){
-		d+= energia/35;
-	}
+
 	void buscarComida(ArrayList<Comida> _comida){
 		if(energia<100){
-		println("energia: "+energia);	
+			buscaComida = true;	
 			float _tx = 0.0;
 			float _ty = 0.0;
 
@@ -154,27 +205,27 @@ class Coco {
 			float _oty = otraComida.pos().y;
 
 			if(dist(cuerpo.getX(),cuerpo.getY(),_etx,_ety)< dist(cuerpo.getX(),cuerpo.getY(),_otx,_oty)){
-				x += (_etx-x)*0.09;
-				y += (_ety-y)*0.09;
+				x += (_etx-x)*0.05;
+				y += (_ety-y)*0.05;
 				_tx = _etx;
 				_ty = _ety;		
-				if(dist(cuerpo.getX(),cuerpo.getY(),_tx,_ty)< d -5){					
+				if(dist(cuerpo.getX(),cuerpo.getY(),_tx,_ty)< d +10){					
 					energia += estaComida.darEnergia(_comida);
-					crecer();
 				}		
 			}else{
-				x += (_otx-x)*0.09;
-				y += (_oty-y)*0.09;
+				x += (_otx-x)*0.05;
+				y += (_oty-y)*0.05;
 				_tx = _otx;
 				_ty = _oty;
-				if(dist(cuerpo.getX(),cuerpo.getY(),_tx,_ty)< d -5){					
+				if(dist(cuerpo.getX(),cuerpo.getY(),_tx,_ty)< d +10){					
 					energia += otraComida.darEnergia(_comida);
-					crecer();
 				}
-			}		
+			}	
 
 			
-		}				
+		}else{
+			buscaComida = false;
+		}			
 
 		
 	}
@@ -185,5 +236,17 @@ class Coco {
 		cuerpo.setNoStroke();
 		cuerpo.setNoFill();
 		cuerpo.attachImage(_i);
+	}
+
+
+	void desecho(ArrayList<Comida> _desecho){
+		if(!buscaComida && _desecho.size()<10){
+			energia-=80;
+			_desecho.add(new Comida(mundo,cuerpo.getX()-d,cuerpo.getY()-d));
+		}
+	}
+
+	FBody cuerpo(){
+		return cuerpo;
 	}
 }
